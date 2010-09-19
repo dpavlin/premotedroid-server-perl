@@ -51,6 +51,10 @@ while ( my $client = $sock->accept() ) {
 			read $client, my $b, 2;
 			my ( $button, $state ) = unpack 'cc', $b;
 			warn "MOUSE_CLICK $button $state\n";
+		} elsif ( $command == MOUSE_WHEEL ) {
+			read $client, my $amount, 1;
+			$amount = unpack 'c', $amount;
+			warn "MOUSE_WHEEL $amount\n";
 		} elsif ( $command == AUTHENTIFICATION ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
