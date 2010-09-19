@@ -83,6 +83,33 @@ while ( my $client = $sock->accept() ) {
 			}
 			warn uc($command)," $key\n";
 			print $xdo "$command '$key'\n";
+		} elsif ( $command == SCREEN_CAPTURE_REQUEST ) {
+			read $client, my $capture_req, 7;
+			my ( $width, $height, $format ) = unpack 's>s>c', $capture_req;
+			my $fmt = $format ? 'jpg' : 'png';
+			warn "SCREEN_CAPTURE_REQUEST $width*$height $format $fmt\n";
+			my $location = `xdotool getmouselocation`;
+			warn "# mouse $location\n";
+
+			my $x = $1 if $location =~ m/x:(\d+)/;
+			my $y = $1 if $location =~ m/y:(\d+)/;
+
+			$x -= $width  / 2; $x = 0 if $x < 0;
+			$y -= $height / 2; $y = 0 if $y < 0;
+
+			my $file = "/tmp/capture.$fmt";
+			my $capture = "xwd -root | convert -crop ${width}x${height}+$x+$y xwd:- $file";
+			# FIXME I wasn't able to persuade import to grab whole screen and disable click
+
+			warn "# $capture\n";
+			system $capture;
+
+			print $client pack('cl>', SCREEN_CAPTURE_RESPONSE, -s $file);
+			open(my $fh, '<', $file) || die "$file: $!";
+			while( read $fh, my $chunk, 8192 ) {
+				print $client $chunk;
+				warn ">> ",length($chunk), "\n";
+			}
 		} else {
 			die "UNSUPPORTED";
 		}
