@@ -46,7 +46,7 @@ while ( my $client = $sock->accept() ) {
 		if ( $command == AUTHENTIFICATION ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
-
+			print $client pack 'cc', AUTHENTIFICATION_RESPONSE, 1; # FIXME anything goes
 		} else {
 			die "UNSUPPORTED";
 		}
