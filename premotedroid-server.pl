@@ -43,7 +43,11 @@ while ( my $client = $sock->accept() ) {
 	while ( read $client, my $command, 1 ) {
 		$command = ord $command;
 		warn "# command: $command\n";
-		if ( $command == AUTHENTIFICATION ) {
+		if ( $command == MOUSE_MOVE ) {
+			read $client, my $move, 4;
+			my ( $x, $y ) = unpack 'ss', $move;
+			warn "MOVE $x $y\n";
+		} elsif ( $command == AUTHENTIFICATION ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
 			print $client pack 'cc', AUTHENTIFICATION_RESPONSE, 1; # FIXME anything goes
