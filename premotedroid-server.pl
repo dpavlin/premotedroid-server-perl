@@ -45,7 +45,7 @@ while ( my $client = $sock->accept() ) {
 		warn "# command: $command\n";
 		if ( $command == MOUSE_MOVE ) {
 			read $client, my $move, 4;
-			my ( $x, $y ) = unpack 'ss', $move;
+			my ( $x, $y ) = unpack 's>s>', $move; # big-endian 16 bit
 			warn "MOVE $x $y\n";
 		} elsif ( $command == MOUSE_CLICK ) {
 			read $client, my $b, 2;
