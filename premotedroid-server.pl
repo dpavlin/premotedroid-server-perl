@@ -65,6 +65,7 @@ while ( my $client = $sock->accept() ) {
 			read $client, my $amount, 1;
 			$amount = unpack 'c', $amount;
 			warn "MOUSE_WHEEL $amount\n";
+			print $xdo 'click ' . ( $amount > 0 ? 4 : 5 ) . "\n" foreach ( 1 .. abs($amount) );
 		} elsif ( $command == AUTHENTIFICATION ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
