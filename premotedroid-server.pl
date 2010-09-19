@@ -39,6 +39,11 @@ use constant FILE_EXPLORE_RESPONSE => 9;
 open(my $xdo, '|-', 'xdotool -') || die $!;
 select($xdo); $|=1;
 
+my $keysyms = {
+	-1 => 'BackSpace',
+	10 => 'Return',
+};
+
 while ( my $client = $sock->accept() ) {
 
 	warn "connect from ", dump $client->peeraddr, $client->peerport;
@@ -64,6 +69,19 @@ while ( my $client = $sock->accept() ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
 			print $client pack 'cc', AUTHENTIFICATION_RESPONSE, 1; # FIXME anything goes
+		} elsif ( $command == KEYBOARD ) {
+			read $client, my $unicode, 4;
+			my $key = unpack 'l>', $unicode;
+			my $command = 'type';
+			if ( defined $keysyms->{$key} ) {
+				$key = $keysyms->{$key};
+				$command = 'key';
+			} else {
+				$key = chr($key);
+				$command = 'key' if $key =~ m/^\w$/;
+			}
+			warn uc($command)," $key\n";
+			print $xdo "$command '$key'\n";
 		} else {
 			die "UNSUPPORTED";
 		}
