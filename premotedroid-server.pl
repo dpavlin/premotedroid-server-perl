@@ -36,6 +36,9 @@ use constant SCREEN_CAPTURE_RESPONSE => 7;
 use constant FILE_EXPLORE_REQUEST => 8;
 use constant FILE_EXPLORE_RESPONSE => 9;
 
+open(my $xdo, '|-', 'xdotool -') || die $!;
+select($xdo); $|=1;
+
 while ( my $client = $sock->accept() ) {
 
 	warn "connect from ", dump $client->peeraddr, $client->peerport;
@@ -47,10 +50,12 @@ while ( my $client = $sock->accept() ) {
 			read $client, my $move, 4;
 			my ( $x, $y ) = unpack 's>s>', $move; # big-endian 16 bit
 			warn "MOVE $x $y\n";
+			print $xdo "mousemove_relative -- $x $y\n";
 		} elsif ( $command == MOUSE_CLICK ) {
 			read $client, my $b, 2;
 			my ( $button, $state ) = unpack 'cc', $b;
 			warn "MOUSE_CLICK $button $state\n";
+			print $xdo 'mouse' . ( $state ? 'down' : 'up' ) . ' ' . $button . "\n";
 		} elsif ( $command == MOUSE_WHEEL ) {
 			read $client, my $amount, 1;
 			$amount = unpack 'c', $amount;
