@@ -79,7 +79,7 @@ while ( my $client = $sock->accept() ) {
 				$command = 'key';
 			} else {
 				$key = chr($key);
-				$command = 'key' if $key =~ m/^\w$/;
+				$command = 'key' if $key =~ m/^[a-z0-9]$/;
 			}
 			warn uc($command)," $key\n";
 			print $xdo "$command '$key'\n";
