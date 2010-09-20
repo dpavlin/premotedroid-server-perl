@@ -111,7 +111,12 @@ while ( my $client = $sock->accept() ) {
 				warn ">> ",length($chunk), "\n";
 			}
 		} else {
-			die "UNSUPPORTED";
+			warn "UNSUPPORTED";
+			while( read $client, my $b, 1 ) {
+				warn "# << ",dump $b;
+				last if ord($b) == MOUSE_CLICK;
+			}
+			read $client, my $move, 2;
 		}
 	}
 
