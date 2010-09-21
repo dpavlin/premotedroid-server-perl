@@ -3,6 +3,7 @@ use warnings;
 use strict;
 
 use IO::Socket::INET;
+use IPC::Open2;
 use Data::Dump qw(dump);
 
 my $sock = IO::Socket::INET->new(
@@ -36,7 +37,9 @@ use constant SCREEN_CAPTURE_RESPONSE => 7;
 use constant FILE_EXPLORE_REQUEST => 8;
 use constant FILE_EXPLORE_RESPONSE => 9;
 
-open(my $xdo, '|-', 'xdotool -') || die $!;
+my($xdo, $xdo_read, $err);
+my $pid = open2($xdo_read, $xdo, 'xdotool', '-');
+warn "xdotool pid $pid\n";
 select($xdo); $|=1;
 
 sub slurp_to_click {
@@ -97,8 +100,10 @@ while ( my $client = $sock->accept() ) {
 			my ( $width, $height, $format ) = unpack 's>s>c', $capture_req;
 			my $fmt = $format ? 'jpg' : 'png';
 			warn "SCREEN_CAPTURE_REQUEST $width*$height $format $fmt\n";
-			my $location = `xdotool getmouselocation`;
-			warn "# mouse $location\n";
+
+			print $xdo "getmouselocation\n";
+			my $location = <$xdo_read>;
+			warn "# mouse location: $location\n";
 
 			my $x = $1 if $location =~ m/x:(\d+)/;
 			my $y = $1 if $location =~ m/y:(\d+)/;
