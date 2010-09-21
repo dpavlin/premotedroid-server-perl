@@ -39,6 +39,15 @@ use constant FILE_EXPLORE_RESPONSE => 9;
 open(my $xdo, '|-', 'xdotool -') || die $!;
 select($xdo); $|=1;
 
+sub slurp_to_click {
+	my $client = shift;
+	while( read $client, my $b, 1 ) {
+		warn "# << ",dump $b;
+		last if ord($b) == MOUSE_CLICK;
+	}
+	read $client, my $move, 2;
+}
+
 my $keysyms = {
 	-1 => 'BackSpace',
 	10 => 'Return',
@@ -110,13 +119,10 @@ while ( my $client = $sock->accept() ) {
 				print $client $chunk;
 				warn ">> ",length($chunk), "\n";
 			}
+			slurp_to_click $client;
 		} else {
 			warn "UNSUPPORTED";
-			while( read $client, my $b, 1 ) {
-				warn "# << ",dump $b;
-				last if ord($b) == MOUSE_CLICK;
-			}
-			read $client, my $move, 2;
+			slurp_to_click $client;
 		}
 	}
 
