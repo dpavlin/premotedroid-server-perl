@@ -36,8 +36,11 @@ use constant SCREEN_CAPTURE_RESPONSE => 7;
 use constant FILE_EXPLORE_REQUEST => 8;
 use constant FILE_EXPLORE_RESPONSE => 9;
 
-open(my $xdo, '|-', 'xdotool -') || die $!;
-select($xdo); $|=1;
+sub xdotool {
+	my $command = join(' ',@_);
+	warn "# xdotool $command";
+	system "xdotool $command";
+}
 
 sub slurp_to_click {
 	my $client = shift;
@@ -64,17 +67,17 @@ while ( my $client = $sock->accept() ) {
 			read $client, my $move, 4;
 			my ( $x, $y ) = unpack 's>s>', $move; # big-endian 16 bit
 			warn "MOVE $x $y\n";
-			print $xdo "mousemove_relative -- $x $y\n";
+			xdotool "mousemove_relative -- $x $y";
 		} elsif ( $command == MOUSE_CLICK ) {
 			read $client, my $b, 2;
 			my ( $button, $state ) = unpack 'cc', $b;
 			warn "MOUSE_CLICK $button $state\n";
-			print $xdo 'mouse' . ( $state ? 'down' : 'up' ) . ' ' . $button . "\n";
+			xdotool 'mouse' . ( $state ? 'down' : 'up' ) . ' ' . $button;
 		} elsif ( $command == MOUSE_WHEEL ) {
 			read $client, my $amount, 1;
 			$amount = unpack 'c', $amount;
 			warn "MOUSE_WHEEL $amount\n";
-			print $xdo 'click ' . ( $amount > 0 ? 4 : 5 ) . "\n" foreach ( 1 .. abs($amount) );
+			xdotool 'click ' . ( $amount > 0 ? 4 : 5 ) foreach ( 1 .. abs($amount) );
 		} elsif ( $command == AUTHENTIFICATION ) {
 			my $auth = readUTF $client;
 			warn "AUTHENTIFICATION [$auth]\n";
@@ -91,7 +94,7 @@ while ( my $client = $sock->accept() ) {
 				$command = 'key' if $key =~ m/^[a-z0-9]$/;
 			}
 			warn uc($command)," $key\n";
-			print $xdo "$command '$key'\n";
+			xdotool "$command '$key'";
 		} elsif ( $command == SCREEN_CAPTURE_REQUEST ) {
 			read $client, my $capture_req, 7;
 			my ( $width, $height, $format ) = unpack 's>s>c', $capture_req;
